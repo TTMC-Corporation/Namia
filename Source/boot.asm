@@ -1,36 +1,32 @@
 [org 0x7c00]
 
-boot:
-mov ax, 0x0100
-mov ss, ax
-mov sp, 0x2000
+mov [DISK_NUMBER], dl ; store the disk number
 
-read:
-xor ax, ax
-int 0x13
-jc read
+mov al, 0x03 ; video mode (text) & clear terminal
+mov ah, 0x00 ; 00h
+int 0x10 ; interrupt
 
-mov ax, 0x07e0
-mov es, ax
-xor bx, bx
-xor dh, dh
-mov cx, 2
-mov ax, 2 * 256 + 2
-int 0x13
-jc read
+mov ah, 0x02 ; 02h
+mov al, 2 ; Number of sectors to read
+xor ch, ch ; cylinder number
+mov cl, 2 ; sector number
+xor dh, dh ; head number
+mov dl, [DISK_NUMBER] ; drive number (0x80 for hard drive)
+mov bx, KERNEL_LOCATION ; data in memory
+int 0x13 ; interrupt
+jc error ; error
 
-stop:
-mov dx, 0x3F2
-mov al, 0x0C
-out dx, al 
+jmp (KERNEL_LOCATION >> 4):0x00 ; Far jump
 
-mov al, 0x03
-mov ah, 0
-int 10h
+DISK_NUMBER db 0 ; Variable for disk number
+KERNEL_LOCATION EQU 0x7e00 ; Kernel location
 
-mov ax, 0x07e0
-mov ds, ax
-jmp 0x07e0:0x00
+end:
+    jmp $
 
-times 510-($-$$) db 0
-dw 0xaa55
+error:
+    mov al, ah ; error code charcter
+    add al, 48 ; convert to number 0-9
+	mov ah, 0x0e ; 0eh
+	int 0x10 ; interrupt
+    jmp end

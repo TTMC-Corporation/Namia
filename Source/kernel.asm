@@ -1,3 +1,5 @@
+[org 0x7e00]
+
 mov bx, startupText
 call writeLine
 mov bx, lineStartText
@@ -24,10 +26,6 @@ enterPressed:
     jmp loop
 
 checkEngine:
-    ;mov bx, theCommand
-    ;mov bh, gameString
-    ;mov bl, gameString
-    ;cmp bh, bl
     add dl, -8
     xor dh, dh
     theLoop:
@@ -129,6 +127,7 @@ newLine:
 
 getCursorPosition:
     mov ah, 0x03
+    mov bh, 0x00
     int 0x10
     ret
 
@@ -147,7 +146,7 @@ warn:
     jmp $
 
 theGame:
-    jmp 2*256
+    jmp (0x8000 >> 4):0x00
 
 error:
     mov al, '!'
